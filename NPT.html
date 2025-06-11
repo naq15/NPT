@@ -1,0 +1,1664 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Number Pattern Tiles - 3D & Animasi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Roboto+Mono&family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+    <style>
+        /* CSS Umum (Tidak Ada Perubahan) */
+        * {
+            box-sizing: border-box;
+            transition: all 0.25s ease-in-out;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            margin: 0;
+            height: 100vh;
+            background: #f9fafb;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow: hidden;
+        }
+
+        /* --- CSS UNTUK NAVIGASI LAYAR (SUDAH DIUBAH BACKGROUND) --- */
+        .screen {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            visibility: hidden;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            /* DIUBAH DI SINI */
+            background: url('backg.png') no-repeat center center;
+            background-size: cover;
+        }
+
+        .screen.active {
+            display: flex;
+            opacity: 1;
+            visibility: visible;
+        }
+
+        #start-screen, #rules-screen, #player-name-screen {
+            text-align: center;
+            padding: 20px;
+            color: white;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
+        }
+
+        .welcome-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 5rem;
+            margin-bottom: 1rem;
+        }
+
+        .welcome-buttons button, #rules-content button, .form-buttons button {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 1.2rem;
+            padding: 12px 24px;
+            margin: 10px;
+            cursor: pointer;
+            border: 2px solid white;
+            border-radius: 8px;
+            background-color: rgba(0,0,0,0.4);
+            color: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .welcome-buttons button:hover, #rules-content button:hover, .form-buttons button:hover {
+            background-color: rgba(255,255,255,0.9);
+            color: black;
+            text-shadow: none;
+        }
+        
+        .name-input-container {
+            background-color: rgba(0,0,0,0.6);
+            padding: 30px 40px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        .name-input-container h2 {
+             font-family: 'Playfair Display', serif;
+             font-size: 2.5rem;
+             margin-top: 0;
+             margin-bottom: 20px;
+        }
+        
+        #player-inputs-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .player-name-input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .form-buttons button[type="submit"] {
+            background-color: #16a34a;
+            border-color: #16a34a;
+            color: white; /* Tambahkan agar konsisten */
+        }
+        .form-buttons button[type="submit"]:hover {
+            background-color: #22c55e;
+            border-color: #22c55e;
+            color: white; /* Tetapkan warna putih saat hover */
+        }
+
+        #rules-screen {
+            justify-content: flex-start;
+            overflow-y: auto;
+        }
+
+        #rules-content {
+            background-color: rgba(0,0,0,0.6);
+            padding: 20px 40px;
+            border-radius: 12px;
+            max-width: 800px;
+            margin-top: 30px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+        
+        .rules-button-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        /* Styling untuk tombol di rules-screen */
+        #rules-content button {
+            color: white; /* Default warna putih untuk tombol di rules */
+            background-color: rgba(0,0,0,0.4);
+            border-color: white;
+        }
+        #rules-content button:hover {
+            background-color: rgba(255,255,255,0.9);
+            color: black;
+            text-shadow: none;
+        }
+
+        /* CSS BARU UNTUK TEKS ATURAN BERWARNA */
+        .rule-text-highlight {
+            color: #facc15; /* Kuning */
+            font-weight: 700;
+        }
+        .rule-sub-highlight {
+            color: #4ade80; /* Hijau muda */
+            font-weight: 600;
+        }
+        .rule-value-highlight {
+            color: #60a5fa; /* Biru muda */
+            font-weight: 700;
+        }
+
+        #game-wrapper {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100%;
+            align-items: stretch;
+        }
+       
+        header {
+            /* DIUBAH DI SINI */
+            background: url('backg.png') no-repeat center center;
+            background-size: cover;
+            color: white;
+            text-shadow: 1px 1px 6px rgba(0,0,0,0.7);
+            padding: 10px 25px;
+            user-select: none;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-side {
+            flex: 1;
+            display: flex; /* Tambahan untuk alignment tombol suara */
+            align-items: center; /* Tambahan */
+        }
+        .header-side.left {
+            justify-content: flex-start; /* Tambahan */
+            gap: 10px; /* Jarak antara tombol */
+        }
+        .header-side.right {
+            justify-content: flex-end; /* Tambahan */
+        }
+        
+        #game-title {
+            font-family: 'Playfair Display', serif;
+            font-weight: 600;
+            font-size: 42px;
+            text-align: center;
+            flex-grow: 1;
+            margin: 0 20px;
+        }
+
+        .header-nav-btn {
+             font-family: 'Montserrat', sans-serif;
+             font-size: 14px;
+             font-weight: 500;
+             padding: 10px 32px;
+             cursor: pointer;
+             border: 1px solid white;
+             border-radius: 6px;
+             background-color: rgba(0,0,0,0.3);
+             color: white;
+             text-shadow: none;
+             flex-shrink: 0;
+        }
+         .header-nav-btn:hover {
+             background-color: rgba(255,255,255,0.9);
+             color: black;
+         }
+
+        /* === CSS BARU UNTUK TOMBOL SUARA === */
+        #sound-toggle-btn {
+            background: none;
+            border: 1px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #sound-toggle-btn svg {
+            width: 100%;
+            height: 100%;
+            fill: white;
+        }
+        #sound-toggle-btn:hover {
+             background-color: rgba(255,255,255,0.2);
+        }
+
+        #turn-info {
+            background: #fcd34d;
+            color: black;
+            text-align: center;
+            font-size: 20px;
+            font-weight: 600;
+            padding: 10px 0;
+            font-family: 'Roboto Mono', monospace;
+            user-select: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 9;
+            transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease-out; /* Tambah transisi transform */
+        }
+
+        /* === CSS BARU UNTUK ANIMASI SKOR === */
+        @keyframes score-pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.25); color: #f59e0b; }
+            100% { transform: scale(1); }
+        }
+        .score.popping {
+            animation: score-pop 0.4s ease-in-out;
+        }
+
+        .game-container {
+            flex: 1;
+            display: flex;
+            padding: 14px;
+            gap: 14px;
+            overflow: hidden;
+            perspective: 1000px;
+        }
+
+        .players-column, #board-container {
+            position: relative; /* Diperlukan untuk positioning elemen animasi */
+        }
+        
+        /* (Sisa CSS dari .players-column sampai .cell tidak berubah) */
+        .players-column {
+            width: 23%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            background: #e2e8f0;
+            padding: 14px;
+            overflow-y: auto;
+            border-radius: 10px;
+            box-shadow: 0 0 6px rgba(0,0,0,0.1);
+        }
+
+        .player-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .player-name {
+            font-weight: 700;
+            font-size: 18px;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .player-icon-svg {
+            width: 30px;
+            height: 30px;
+            vertical-align: middle;
+        }
+
+        .player-icon-svg.player-1 .fill-color { fill: red; }
+        .player-icon-svg.player-2 .fill-color { fill: blue; }
+        .player-icon-svg.player-3 .fill-color { fill: yellow; }
+        .player-icon-svg.player-4 .fill-color { fill: green; }
+
+        .score {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .tiles {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(40px, 1fr));
+            grid-auto-rows: 40px;
+            gap: 6px;
+        }
+
+        @keyframes tileFadeIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.8) rotateX(15deg);
+                filter: drop-shadow(0 3px 3px rgba(0,0,0,0.1));
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) rotateX(0deg);
+                filter: drop-shadow(0 5px 7px rgba(0,0,0,0.25));
+            }
+        }
+
+        .tile {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            font-weight: 700;
+            color: white;
+            cursor: grab;
+            font-size: 16px;
+            user-select: none;
+            box-shadow:
+                inset 0 2px 6px rgba(255,255,255,0.3),
+                0 5px 10px rgba(0,0,0,0.25);
+            transform-style: preserve-3d;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            opacity: 0;
+            background-clip: padding-box;
+            background-image:
+                linear-gradient(145deg, rgba(255,255,255,0.15), rgba(0,0,0,0.15));
+        }
+
+        .tile.active {
+            opacity: 1;
+            transform: scale(1) rotateX(0deg);
+            animation: tileFadeIn 0.6s ease forwards;
+            animation-delay: var(--tile-delay, 0s);
+        }
+
+        .tile.merah { background-color: #ef4444; background-image: linear-gradient(145deg, #f87171, #b91c1c); }
+        .tile.biru { background-color: #3b82f6; background-image: linear-gradient(145deg, #60a5fa, #1e40af); }
+        .tile.kuning { background-color: #facc15; background-image: linear-gradient(145deg, #fde047, #a16207); }
+        .tile.hijau { background-color: #16a34a; background-image: linear-gradient(145deg, #4ade80, #166534); }
+
+        .tile:active {
+            cursor: grabbing;
+            box-shadow: 0 15px 25px rgba(0,0,0,0.45), inset 0 3px 10px rgba(255,255,255,0.5);
+            transform: scale(1.15) rotateX(10deg) translateZ(15px);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            z-index: 1000;
+            user-select: none;
+        }
+
+        .tile.selected {
+            outline: 3px solid black;
+            transform: scale(1.1) translateZ(10px);
+            z-index: 1;
+            box-shadow: 0 10px 18px rgba(0,0,0,0.4), inset 0 2px 8px rgba(255,255,255,0.3);
+        }
+
+        .player-panel button {
+            padding: 8px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            border: none;
+            border-radius: 6px;
+            background: #06b6d4;
+            color: black;
+            box-shadow: 0 3px 6px rgba(6,182,212,0.5);
+            transition: background-color 0.25s ease;
+        }
+
+        .player-panel button:disabled { background: #94a3b8; cursor: default; box-shadow: none; }
+        .player-panel button:hover:not(:disabled) { background: #0891b2; box-shadow: 0 5px 10px rgba(8,145,178,0.7); }
+
+        .buttons { margin-top: 10px; display: flex; gap: 10px; }
+
+        #board-container {
+            flex: 2.5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #cbd5e1;
+            padding: 14px;
+            overflow: auto;
+            border-radius: 10px;
+            box-shadow: 0 0 12px rgba(0,0,0,0.15);
+            perspective: 1000px;
+        }
+
+        #board {
+            display: grid;
+            grid-template-columns: repeat(15, 40px);
+            grid-template-rows: repeat(12, 40px);
+            gap: 6px;
+            user-select: none;
+            transform-style: preserve-3d;
+        }
+
+        .cell {
+            width: 40px; height: 40px; background: #e2e8f0; border-radius: 8px;
+            text-align: center; line-height: 40px; font-weight: bold;
+            color: white; font-size: 14px; transition: all 0.2s ease;
+            box-shadow: inset 0 0 6px #a0aec0; cursor: default; transform-style: preserve-3d;
+            position: relative; /* Diperlukan untuk pseudo-element animasi */
+        }
+        
+        /* === CSS BARU UNTUK ANIMASI SHOCKWAVE === */
+        .cell.shockwave::after {
+            content: '';
+            position: absolute;
+            top: -10px; left: -10px;
+            right: -10px; bottom: -10px;
+            border-radius: 50%;
+            border: 2px solid rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            animation: shockwave-animation 0.5s ease-out;
+            z-index: -1;
+        }
+        @keyframes shockwave-animation {
+            0% {
+                transform: scale(0.5);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+        
+        .cell:hover {
+            transform: scale(1.05) translateZ(8px);
+            box-shadow: 0 10px 18px rgba(0,0,0,0.25), inset 0 0 10px #a0aec0;
+            z-index: 10;
+        }
+
+        .cell.preview { opacity: 0.6; box-shadow: inset 0 0 0 3px rgba(0,0,0,0.3); }
+        .cell.preview.merah  { background: rgba(239,68,68,0.4); }
+        .cell.preview.biru  { background: rgba(59,130,246,0.4); }
+        .cell.preview.kuning { background: rgba(250,204,21,0.5); }
+        .cell.preview.hijau  { background: rgba(22,163,74,0.4); }
+
+        .cell.bounce { animation: bounce 0.3s ease; }
+        @keyframes bounce { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
+
+        .merah { background: #ef4444; } .biru { background: #3b82f6; }
+        .kuning { background-color: #facc15; } .hijau { background: #16a34a; } /* Mengubah kuning agar konsisten */
+
+        .players-column::-webkit-scrollbar { width: 8px; }
+        .players-column::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
+        
+        /* (CSS untuk Game Message tidak berubah) */
+        #game-message-container {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); z-index: 1000;
+            display: flex; justify-content: center; align-items: center;
+            pointer-events: none; opacity: 0; transition: opacity 0.4s ease-out;
+        }
+        #game-message-text {
+            font-family: 'Press Start 2P', cursive; /* SUDAH PIXEL FONT */
+            font-size: 3.5em; 
+            color: #FFF;
+            text-shadow: 2px 2px 0px #000, -2px -2px 0px #000, 2px -2px 0px #000, -2px 2px 0px #000;
+            white-space: pre; letter-spacing: 0.1em; overflow: hidden; display: inline-block;
+            border-right: 3px solid transparent; animation: blinkCursor 0.75s step-end infinite;
+        }
+        @keyframes blinkCursor { from, to { border-color: transparent } 50% { border-color: #FFF; } }
+        .game-message-typed #game-message-text { border-right: none; animation: none; }
+
+        /* === CSS BARU UNTUK ANIMASI KONFETI === */
+        #confetti-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 2000;
+        }
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            opacity: 0.7;
+            animation: fall 5s linear forwards;
+        }
+        @keyframes fall {
+            to {
+                transform: translateY(110vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* === CSS BARU UNTUK POPUP AKHIR GAME === */
+        #end-game-popup-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000; /* Di atas confetti dan game message */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease-in-out, visibility 0.5s;
+        }
+
+        #end-game-popup-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .end-game-popup-content {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            max-width: 500px;
+            width: 90%;
+            transform: scale(0.8);
+            transition: transform 0.3s ease-out;
+        }
+
+        #end-game-popup-overlay.active .end-game-popup-content {
+            transform: scale(1);
+        }
+
+        .end-game-popup-content h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: #333;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        .end-game-popup-content p {
+            font-size: 1.1rem;
+            color: #555;
+            margin-bottom: 30px;
+            line-height: 1.6;
+            white-space: pre-line; /* Agar baris baru (\n) berfungsi */
+        }
+
+        .end-game-popup-buttons button {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            padding: 12px 24px;
+            margin: 0 10px;
+            cursor: pointer;
+            border: 2px solid;
+            border-radius: 8px;
+            background-color: transparent;
+            color: #333;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .end-game-popup-buttons button#restart-game-btn {
+            background-color: #16a34a;
+            border-color: #16a34a;
+            color: white;
+        }
+
+        .end-game-popup-buttons button#restart-game-btn:hover {
+            background-color: #22c55e;
+            border-color: #22c55e;
+        }
+
+        .end-game-popup-buttons button#back-to-menu-btn {
+            background-color: #ef4444;
+            border-color: #ef4444;
+            color: white;
+        }
+        .end-game-popup-buttons button#back-to-menu-btn:hover {
+            background-color: #dc2626;
+            border-color: #dc2626;
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="bg-music" loop>
+        <source src="backsound.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="sfx-place-tile">
+        <source src="bubble.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="sfx-turn-change">
+        <source src="turn.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="sfx-click">
+        <source src="click.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="sfx-win">
+        <source src="winning.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="sfx-typing">
+        <source src="typing.mp3" type="audio/mpeg">
+    </audio>
+
+
+    <div id="start-screen" class="screen active">
+        <div class="welcome-content">
+            <h1 class="welcome-title">Number Pattern Tiles</h1>
+            <div class="welcome-buttons">
+                <button id="start-game-btn">Mulai Bermain</button>
+                <button id="view-rules-btn">Aturan Main</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="player-name-screen" class="screen">
+        <div class="name-input-container">
+            <h2>Masukkan Nama Pemain</h2>
+            <form id="player-name-form">
+                <div id="player-inputs-container">
+                </div>
+                <div class="form-buttons">
+                    <button type="button" id="back-to-start-from-names-btn">Kembali</button>
+                    <button type="submit">Lanjutkan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <div id="rules-screen" class="screen">
+        <div id="rules-content">
+            <h2>Aturan Main</h2>
+            <ul>
+                 <li><span class="rule-text-highlight">Tujuan:</span> Mencetak skor tertinggi dengan menyusun ubin (tile) membentuk barisan di papan permainan.</li>
+                 <li><span class="rule-text-highlight">Barisan (Sequence):</span> Sebuah barisan adalah deretan ubin <span class="rule-sub-highlight">satu warna</span> yang lurus (horizontal atau vertikal) dengan nilai angka yang membentuk <span class="rule-sub-highlight">pola aritmatika atau geometri</span>. Minimal <span class="rule-value-highlight">2 ubin</span> untuk membentuk barisan.</li>
+                 <li><span class="rule-text-highlight">Skor:</span> Pemain mendapatkan <span class="rule-value-highlight">1 poin</span> setiap kali berhasil meletakkan satu ubin dengan valid di papan permainan.</li>
+                 <li><span class="rule-text-highlight">Giliran:</span> Setiap pemain meletakkan satu ubin dari tangan ke papan per giliran.</li>
+                 <li><span class="rule-text-highlight">Aturan Penempatan:</span>
+                     <ul>
+                          <li><span class="rule-sub-highlight">Ubin Pertama & Kedua:</span> Ubin pertama bisa diletakkan di mana saja. Ubin kedua harus diletakkan bersebelahan (tidak diagonal) dengan ubin pertama dan harus berwarna sama.</li>
+                          <li><span class="rule-sub-highlight">Menyambung Warna Sama:</span> Ubin harus diletakkan untuk menyambung atau membuat barisan lurus baru dengan ubin berwarna sama. Dilarang membuat "tikungan" atau "cabang" dengan warna yang sama.</li>
+                          <li><span class="rule-sub-highlight">Menyambung Warna Beda:</span> Sebuah ubin boleh diletakkan di samping barisan (minimal 3 ubin) yang warnanya <span class="rule-sub-highlight">berbeda</span>, dengan syarat:
+                                <ul>
+                                    <li>Nilai angkanya harus sama dengan ubin di sebelahnya.</li>
+                                    <li>Ubin baru ini tidak boleh menyentuh ubin lain yang warnanya sama dengannya.</li>
+                                </ul>
+                          </li>
+                     </ul>
+                 </li>
+                 <li><span class="rule-text-highlight">Akhir Permainan:</span> Permainan dapat diakhiri kapan saja. Pemain dengan skor tertinggi adalah pemenangnya.</li>
+            </ul>
+            <div class="rules-button-container">
+                <button id="start-from-rules-btn">Mulai Permainan</button>
+                <button id="back-to-game-running-btn" style="display: none;">Kembali ke Permainan</button>
+                <button id="back-to-start-btn">Kembali ke Awal</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-wrapper" class="screen">
+        <header>
+            <div class="header-side left">
+                <button id="game-back-to-start-btn" class="header-nav-btn">Kembali ke Awal</button>
+                <button id="sound-toggle-btn" title="Mute/Unmute Sound">
+                    <svg id="sound-on-icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"></path></svg>
+                    <svg id="sound-off-icon" viewBox="0 0 24 24" style="display:none;"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"></path></svg>
+                </button>
+            </div>
+            <span id="game-title">Number Pattern Tiles</span>
+            <div class="header-side right">
+                <button id="game-view-rules-btn" class="header-nav-btn">Lihat Aturan</button>
+            </div>
+        </header>
+        <div id="turn-info">Giliran Pemain 1</div>
+        <div class="game-container">
+            <div class="players-column" id="left-players"></div>
+            <div id="board-container">
+                <div id="board"></div>
+                <div id="confetti-container"></div>
+            </div>
+            <div class="players-column" id="right-players"></div>
+        </div>
+
+        <div id="game-message-container">
+            <span id="game-message-text"></span>
+        </div>
+
+        <div id="end-game-popup-overlay">
+            <div class="end-game-popup-content">
+                <h3 id="end-game-title">Permainan Selesai!</h3>
+                <p id="final-scores-summary">Skor Akhir:</p>
+                <div class="end-game-popup-buttons">
+                    <button id="restart-game-btn">Main Lagi</button>
+                    <button id="back-to-menu-btn">Kembali ke Menu</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <script>
+        // === JAVASCRIPT BARU: Variabel Audio dan Status Suara ===
+        let isMuted = false;
+        const bgMusic = document.getElementById('bg-music');
+        const sfxPlaceTile = document.getElementById('sfx-place-tile');
+        const sfxTurnChange = document.getElementById('sfx-turn-change');
+        const sfxClick = document.getElementById('sfx-click');
+        const sfxWin = document.getElementById('sfx-win');
+        const sfxTyping = document.getElementById('sfx-typing'); // BARU: Tambah sfxTyping
+        const allAudio = [bgMusic, sfxPlaceTile, sfxTurnChange, sfxClick, sfxWin, sfxTyping]; // BARU: Tambah sfxTyping ke array
+
+        // Variabel Game yang sudah ada
+        let gameState = 'IDLE';
+        let playerNames = [];
+        const colors = ['merah', 'biru', 'kuning', 'hijau'];
+        let playerIcons = [
+            { type: 'pentagon', color: 'merah' },
+            { type: 'square', color: 'biru' },
+            { type: 'triangle', color: 'kuning' },
+            { type: 'circle', color: 'hijau' }
+        ];
+        const playerCount = 4;
+        let players = Array.from({ length: playerCount }, () => []);
+        let scores = Array(playerCount).fill(0);
+        let currentPlayer = 0;
+        const COLS = 15;
+        const ROWS = 12;
+        const board = Array(COLS * ROWS).fill(null); 
+        let draggingTileColor = null;
+        let draggingTileData = null;
+        const gameMessageContainer = document.getElementById('game-message-container');
+        const gameMessageText = document.getElementById('game-message-text');
+        const gameBoardEl = document.getElementById('board');
+        
+        // Elemen UI yang sudah ada
+        const startScreen = document.getElementById('start-screen');
+        const rulesScreen = document.getElementById('rules-screen');
+        const playerNameScreen = document.getElementById('player-name-screen');
+        const gameWrapper = document.getElementById('game-wrapper');
+        const startGameBtn = document.getElementById('start-game-btn');
+        const viewRulesBtn = document.getElementById('view-rules-btn');
+        const backToStartBtn = document.getElementById('back-to-start-btn');
+        const gameBackToStartBtn = document.getElementById('game-back-to-start-btn');
+        const gameViewRulesBtn = document.getElementById('game-view-rules-btn');
+        const startFromRulesBtn = document.getElementById('start-from-rules-btn');
+        const playerNameForm = document.getElementById('player-name-form');
+        const backToStartFromNamesBtn = document.getElementById('back-to-start-from-names-btn');
+
+        // === Elemen Pop-up Akhir Game ===
+        const endGamePopupOverlay = document.getElementById('end-game-popup-overlay');
+        const endGameTitle = document.getElementById('end-game-title');
+        const finalScoresSummary = document.getElementById('final-scores-summary');
+        const restartGameBtn = document.getElementById('restart-game-btn');
+        const backToMenuBtn = document.getElementById('back-to-menu-btn');
+
+        // === Tombol BARU di Rules Screen ===
+        const backToGameRunningBtn = document.getElementById('back-to-game-running-btn');
+
+
+        // === JAVASCRIPT BARU: Fungsi untuk memutar audio ===
+        function playAudio(audioElement) {
+            if (!isMuted && audioElement) {
+                audioElement.currentTime = 0;
+                
+                // --- PENGATURAN VOLUME SFX ---
+                if (audioElement === sfxPlaceTile) {
+                    audioElement.volume = 0.5; // Contoh: Set volume sfxPlaceTile ke 50%
+                } else if (audioElement === sfxTurnChange) {
+                    audioElement.volume = 0.15; // DIKECILKAN: Set volume sfxTurnChange ke 15% (sebelumnya 0.4)
+                } else if (audioElement === sfxClick) {
+                    audioElement.volume = 0.6; // Contoh: Set volume sfxClick ke 60%
+                } else if (audioElement === sfxWin) {
+                    audioElement.volume = 0.8; // Contoh: Set volume sfxWin ke 80%
+                } else if (audioElement === sfxTyping) { // BARU: Pengaturan volume untuk sfxTyping
+                    audioElement.volume = 0.08; // Sangat kecil, agar tidak mengganggu
+                }
+                // Jika tidak ada kondisi di atas, volume defaultnya adalah 1.0 (misalnya bgMusic)
+
+                audioElement.play().catch(e => console.log("Audio play was interrupted."));
+            }
+        }
+        
+        // (Sisa kode Javascript tetap sama, dengan sedikit penambahan di beberapa fungsi)
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function showScreen(screenElement) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            screenElement.classList.add('active');
+            if (screenElement === gameWrapper) {
+                // Pastikan musik latar hanya diputar jika belum dimute
+                if (!isMuted) {
+                    playAudio(bgMusic);
+                    bgMusic.volume = 0.3;
+                }
+            } else {
+                if (bgMusic) bgMusic.pause();
+            }
+        }
+        
+        function generatePlayerInputs() {
+            const container = document.getElementById('player-inputs-container');
+            container.innerHTML = '';
+            for (let i = 0; i < playerCount; i++) {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.placeholder = `Nama Pemain ${i + 1}`;
+                input.className = 'player-name-input';
+                input.required = true;
+                
+                // --- BARU: Event listener untuk suara mengetik ---
+                input.addEventListener('input', () => {
+                    playAudio(sfxTyping);
+                });
+                // --- Batas BARU ---
+
+                container.appendChild(input);
+            }
+        }
+
+        function handleStartGameClick() {
+            playAudio(sfxClick);
+            generatePlayerInputs();
+            showScreen(playerNameScreen);
+        }
+
+        startGameBtn.addEventListener('click', handleStartGameClick);
+        startFromRulesBtn.addEventListener('click', handleStartGameClick);
+
+        playerNameForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            playAudio(sfxClick);
+            const inputs = document.querySelectorAll('.player-name-input');
+            const names = Array.from(inputs).map(input => input.value.trim());
+
+            if (names.some(name => name === '')) {
+                alert('Semua nama pemain harus diisi!');
+                return;
+            }
+
+            let initialPlayersData = names.map((name, index) => ({
+                name: name,
+                iconData: playerIcons[index]
+            }));
+
+            shuffle(initialPlayersData);
+
+            playerNames = initialPlayersData.map(p => p.name);
+            playerIcons = initialPlayersData.map(p => p.iconData);
+
+            showScreen(gameWrapper);
+            initializeNewGame();
+        });
+
+        // --- MODIFIKASI: Event listener untuk tombol "Lihat Aturan" ---
+        viewRulesBtn.addEventListener('click', () => { // Dari start screen
+            playAudio(sfxClick);
+            showScreen(rulesScreen);
+            // Sembunyikan tombol "Kembali ke Permainan" dan tampilkan "Mulai Permainan"
+            backToGameRunningBtn.style.display = 'none';
+            startFromRulesBtn.style.display = 'inline-block'; // Atau 'block' tergantung layout
+        });
+
+        gameViewRulesBtn.addEventListener('click', () => { // Dari dalam game
+            playAudio(sfxClick);
+            showScreen(rulesScreen);
+            // Tampilkan tombol "Kembali ke Permainan" dan sembunyikan "Mulai Permainan"
+            backToGameRunningBtn.style.display = 'inline-block'; // Atau 'block'
+            startFromRulesBtn.style.display = 'none';
+        });
+
+        // --- Event listener BARU untuk tombol "Kembali ke Permainan" ---
+        backToGameRunningBtn.addEventListener('click', () => {
+            playAudio(sfxClick);
+            showScreen(gameWrapper); // Kembali ke game tanpa mereset
+        });
+
+        function goBackToStart() {
+            playAudio(sfxClick);
+            playerNames = [];
+            playerIcons = [
+                { type: 'pentagon', color: 'merah' },
+                { type: 'square', color: 'biru' },
+                { type: 'triangle', color: 'kuning' },
+                { type: 'circle', color: 'hijau' }
+            ];
+            scores = Array(playerCount).fill(0); // Reset skor
+            currentPlayer = 0; // Reset pemain
+            for(let i=0; i<board.length; i++) board[i] = null; // Bersihkan papan
+            endGamePopupOverlay.classList.remove('active'); // Sembunyikan popup jika aktif
+            hideGameMessage(); // Sembunyikan pesan game
+            showScreen(startScreen);
+        }
+        
+        backToStartBtn.addEventListener('click', goBackToStart);
+        gameBackToStartBtn.addEventListener('click', goBackToStart);
+        backToStartFromNamesBtn.addEventListener('click', goBackToStart);
+        
+        function createPlayerPanel(i) {
+            const p = document.createElement('div');
+            p.className = 'player-panel';
+            const name = playerNames[i] || `Pemain ${i + 1}`;
+            p.innerHTML = `
+                <div class="player-name">
+                    ${getPlayerSVGIcon(i)}
+                    ${name}
+                </div>
+                <div class="score" id="score-${i}">Skor: ${scores[i]}</div>
+                <div class="tiles" id="player${i}-tiles"></div>
+            `;
+            const btnWrap = document.createElement('div');
+            btnWrap.className = 'buttons';
+            const skipBtn = document.createElement('button');
+            skipBtn.textContent = 'Skip';
+            skipBtn.disabled = (i !== currentPlayer || gameState !== 'GAME_ACTIVE');
+            skipBtn.onclick = skipTurn;
+            const endBtn = document.createElement('button');
+            endBtn.textContent = 'Akhiri';
+            endBtn.onclick = endGameAction; 
+            btnWrap.appendChild(skipBtn);
+            btnWrap.appendChild(endBtn);
+            p.appendChild(btnWrap);
+            return p;
+        }
+        
+        function updateTurnInfo() {
+            playAudio(sfxTurnChange); // MODIFIKASI: mainkan suara ganti giliran
+            const turnInfoElement = document.getElementById("turn-info");
+            const currentPlayerIconData = playerIcons[currentPlayer];
+            const currentName = playerNames[currentPlayer] || `Pemain ${currentPlayer + 1}`;
+            turnInfoElement.textContent = `Giliran ${currentName}`;
+            
+            // MODIFIKASI: Animasi kecil pada banner giliran
+            turnInfoElement.style.transform = 'scale(1.05)';
+            setTimeout(() => { turnInfoElement.style.transform = 'scale(1)'; }, 200);
+
+            let backgroundColor = '';
+            let textColor = 'black';
+            switch (currentPlayerIconData.color) {
+                case 'merah': backgroundColor = '#ef4444'; textColor = 'white'; break;
+                case 'biru': backgroundColor = '#3b82f6'; textColor = 'white'; break;
+                case 'kuning': backgroundColor = '#facc15'; textColor = 'black'; break;
+                case 'hijau': backgroundColor = '#16a34a'; textColor = 'white'; break;
+                default: backgroundColor = '#fcd34d'; textColor = 'black';
+            }
+            turnInfoElement.style.backgroundColor = backgroundColor;
+            turnInfoElement.style.color = textColor;
+        }
+        
+        // === JAVASCRIPT BARU: Fungsi untuk membuat animasi konfeti ===
+        function createConfettiAnimation() {
+            const container = document.getElementById('confetti-container');
+            if(!container) return;
+            container.innerHTML = ''; // Hapus konfeti lama
+            const confettiCount = 150;
+            const confettiColors = ['#ef4444', '#3b82f6', '#facc15', '#16a34a', '#f97316', '#ec4899'];
+
+            for (let i = 0; i < confettiCount; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                const size = Math.random() * 10 + 5;
+                confetti.style.width = `${size}px`;
+                confetti.style.height = `${size}px`;
+                confetti.style.backgroundColor = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+                confetti.style.left = `${Math.random() * 100}%`;
+                confetti.style.top = `${-20 - Math.random() * 100}px`; // Mulai dari atas layar
+                confetti.style.animationDelay = `${Math.random() * 2}s`;
+                confetti.style.animationDuration = `${Math.random() * 3 + 3}s`; // Durasi jatuh bervariasi
+                container.appendChild(confetti);
+            }
+        }
+        
+        function showGameEndAnimation(winner = null) {
+            // MODIFIKASI: Mainkan suara kemenangan dan tampilkan konfeti
+            if(winner) {
+                playAudio(sfxWin);
+                createConfettiAnimation();
+            }
+
+            gameMessageContainer.style.opacity = 1;
+            let message = "GAME OVER";
+            let finalWinnerMessage = ""; // Pesan untuk pop-up
+
+            if (winner) {
+                message = `${winner} WINS!`;
+                finalWinnerMessage = `Selamat, ${winner} memenangkan permainan!`;
+            } else {
+                const allScoresEqual = scores.every(s => s === scores[0]);
+                if(scores.length > 0 && allScoresEqual && !winner) {
+                    message = "DRAW!";
+                    finalWinnerMessage = "Permainan berakhir seri!";
+                }
+                else if (!winner) {
+                    const maxScore = Math.max(...scores);
+                    const winners = scores
+                        .map((s, idx) => {
+                             if (s === maxScore) {
+                                 return playerNames[idx] || `Pemain ${idx + 1}`;
+                             }
+                             return null;
+                         })
+                         .filter(Boolean);
+                    if (winners.length === 1) {
+                         message = `${winners[0]} WINS!`;
+                         finalWinnerMessage = `Selamat, ${winners[0]} memenangkan permainan!`;
+                         playAudio(sfxWin); // Mainkan juga jika hanya satu pemenang
+                         createConfettiAnimation();
+                     }
+                     else if (winners.length > 1) {
+                        message = "DRAW!";
+                        finalWinnerMessage = "Permainan berakhir seri!"; // Jika lebih dari satu pemenang, tetap seri
+                     }
+                }
+            }
+            
+            // Tampilkan pesan utama dan animasi ketik
+            return typeMessage(message, 100)
+                .then(() => new Promise(resolve => {
+                    setTimeout(() => {
+                        gameMessageContainer.style.opacity = 0; // Sembunyikan pesan utama
+                        document.getElementById('confetti-container').innerHTML = ''; // Hapus konfeti
+                        
+                        // === Tampilkan Pop-up Akhir Game ===
+                        endGamePopupOverlay.classList.add('active');
+                        endGameTitle.textContent = finalWinnerMessage || message; // Gunakan pesan pemenang/seri atau "GAME OVER"
+
+                        // Tampilkan skor akhir setiap pemain
+                        let scoresText = "Skor Akhir:\n";
+                        playerNames.forEach((name, index) => {
+                            scoresText += `${name}: ${scores[index]} poin\n`;
+                        });
+                        finalScoresSummary.textContent = scoresText;
+
+                        resolve(); // Lanjutkan promise setelah pop-up muncul
+                    }, 3000); // Durasi setelah pesan utama selesai diketik
+                }));
+        }
+        
+        function hideGameMessage() {
+            gameMessageContainer.style.opacity = 0;
+            gameMessageContainer.classList.remove('game-message-typed');
+            gameMessageText.textContent = '';
+        }
+        function typeMessage(message, delayPerChar = 75) {
+            gameMessageText.textContent = '';
+            gameMessageContainer.classList.remove('game-message-typed');
+            let i = 0;
+            return new Promise(resolve => {
+                const typingInterval = setInterval(() => {
+                    if (i < message.length) {
+                        gameMessageText.textContent += message.charAt(i);
+                        i++;
+                    } else {
+                        clearInterval(typingInterval);
+                        gameMessageContainer.classList.add('game-message-typed');
+                        resolve();
+                    }
+                }, delayPerChar);
+            });
+        }
+        function showGameStartAnimation() {
+            gameMessageContainer.style.opacity = 1;
+            return typeMessage("GAME START", 100)
+                .then(() => new Promise(resolve => setTimeout(() => {
+                    gameMessageContainer.style.opacity = 0;
+                    setTimeout(() => { gameMessageText.textContent = ''; resolve(); }, 500);
+                }, 1200)));
+        }
+
+        function animateTilesInSequence() {
+            return new Promise(resolve => {
+                let delay = 0;
+                const currentTilesInPlay = document.querySelectorAll('.player-panel .tile');
+                currentTilesInPlay.forEach(tile => tile.classList.remove('active'));
+                if (currentTilesInPlay.length === 0) { resolve(); return; }
+                let activatedTilesCount = 0;
+                currentTilesInPlay.forEach((tile) => {
+                    setTimeout(() => {
+                        tile.classList.add('active');
+                        activatedTilesCount++;
+                        if (activatedTilesCount === currentTilesInPlay.length) {
+                            setTimeout(resolve, 600); 
+                        }
+                    }, delay);
+                    delay += 50; 
+                });
+            });
+        }
+        function resetTileAnimations() {
+            const currentTilesInPlay = document.querySelectorAll('.player-panel .tile');
+            currentTilesInPlay.forEach(tile => {
+                tile.classList.remove('active');
+                tile.style.opacity = '0';
+                tile.style.transform = 'scale(0.8) rotateX(15deg)';
+            });
+        }
+        
+        function dealTiles() {
+            players = Array.from({ length: playerCount }, () => []);
+            scores = Array(playerCount).fill(0);
+            currentPlayer = 0;
+            for(let i=0; i<board.length; i++) board[i] = null;
+
+            const tempAllTiles = [];
+             colors.forEach(color => {
+                for (let i = 1; i <= 20; i++) {
+                    tempAllTiles.push({ value: i, color });
+                }
+            });
+            shuffle(tempAllTiles);
+            for (let i = 0; i < tempAllTiles.length; i++) {
+                players[i % playerCount].push(tempAllTiles[i]);
+            }
+        }
+
+        function skipTurn() {
+            if (gameState !== 'GAME_ACTIVE') return;
+            playAudio(sfxClick); // MODIFIKASI: Suara klik saat skip
+            currentPlayer = (currentPlayer + 1) % playerCount;
+            updateTurnInfo();
+            renderPlayers(); 
+        }
+        function endGameAction() { 
+            if (gameState === 'GAME_ACTIVE' || gameState === 'GAME_OVER_ANIMATING') {
+                playAudio(sfxClick); // MODIFIKASI: Suara klik saat mengakhiri
+                gameState = 'GAME_OVER_ANIMATING';
+                const maxScore = Math.max(...scores);
+                const winners = scores
+                    .map((s, idx) => s === maxScore ? (playerNames[idx] || `Pemain ${idx + 1}`) : null)
+                    .filter(Boolean);
+                
+                let winnerString = null;
+                if (winners.length === 1) winnerString = winners[0];
+                else if (winners.length > 1 && winners.length < playerCount) winnerString = "DRAW AMONG WINNERS";
+                else if (winners.length === playerCount && scores.every(s => s === scores[0])) winnerString = null;
+                else if (winners.length > 1) winnerString = "DRAW!";
+
+                showGameEndAnimation(winnerString).then(() => {
+                    console.log("Game Over!");
+                    gameState = 'GAME_OVER';
+                });
+            }
+        }
+        function renderPlayerTilesInGrid(tiles, container, playerIndex) {
+            container.innerHTML = '';
+            container.className = 'tiles';
+            tiles.forEach((tile) => {
+                const t = document.createElement("div");
+                t.className = `tile ${tile.color}`;
+                t.textContent = tile.value;
+                t.classList.add('active');
+                if (playerIndex === currentPlayer && gameState === 'GAME_ACTIVE') {
+                    t.draggable = true;
+                    t.ondragstart = (e) => {
+                        draggingTileColor = tile.color;
+                        draggingTileData = tile;
+                        e.dataTransfer.setData("text/plain", JSON.stringify(tile));
+                    };
+                    t.onclick = () => {
+                        if (t.classList.contains('selected')) {
+                            t.classList.remove('selected');
+                        } else {
+                            container.querySelectorAll('.tile.selected').forEach(el => el.classList.remove('selected'));
+                            t.classList.add('selected');
+                        }
+                    };
+                } else {
+                    t.draggable = false;
+                    t.style.cursor = 'default';
+                }
+                container.appendChild(t);
+            });
+        }
+        function renderPlayers() {
+            const leftContainer = document.getElementById("left-players");
+            leftContainer.innerHTML = '';
+            for (let i = 0; i < Math.min(2, playerCount); i++) {
+                leftContainer.appendChild(createPlayerPanel(i));
+            }
+            const rightContainer = document.getElementById("right-players");
+            rightContainer.innerHTML = '';
+            for (let i = 2; i < playerCount; i++) {
+                rightContainer.appendChild(createPlayerPanel(i));
+            }
+            for (let i = 0; i < playerCount; i++) {
+                const playerTilesContainer = document.getElementById(`player${i}-tiles`);
+                if(playerTilesContainer) {
+                    renderPlayerTilesInGrid(players[i], playerTilesContainer, i);
+                }
+            }
+        }
+        function getPlayerSVGIcon(playerIndex) {
+            const iconData = playerIcons[playerIndex % playerIcons.length];
+            const iconType = iconData.type;
+            const originalIndex = [
+                { type: 'pentagon', color: 'merah' },
+                { type: 'square', color: 'biru' },
+                { type: 'triangle', color: 'kuning' },
+                { type: 'circle', color: 'hijau' }
+            ].findIndex(p => p.type === iconData.type);
+
+            const iconColorClass = `player-${originalIndex + 1}`;
+            let svgContent = '';
+            switch (iconType) {
+                case 'pentagon': svgContent = `<svg class="player-icon-svg ${iconColorClass}" viewBox="0 0 100 100"><polygon class="fill-color" points="50,0 100,38 81,100 19,100 0,38" /></svg>`; break;
+                case 'square': svgContent = `<svg class="player-icon-svg ${iconColorClass}" viewBox="0 0 100 100"><rect class="fill-color" x="10" y="10" width="80" height="80" /></svg>`; break;
+                case 'triangle': svgContent = `<svg class="player-icon-svg ${iconColorClass}" viewBox="0 0 100 100"><polygon class="fill-color" points="50,0 100,100 0,100" /></svg>`; break;
+                case 'circle': svgContent = `<svg class="player-icon-svg ${iconColorClass}" viewBox="0 0 100 100"><circle class="fill-color" cx="50" cy="50" r="40" /></svg>`; break;
+            }
+            return svgContent;
+        }
+
+        function clearPreviews() {
+            document.querySelectorAll('.cell.preview').forEach(c => {
+                c.classList.remove('preview', 'merah', 'biru', 'kuning', 'hijau');
+            });
+        }
+        
+        // (Fungsi-fungsi logika game seperti getTileAt, isArithmetic, dll. tidak diubah karena tidak terkait dengan penskoran dasar)
+        function getTileAt(x, y, currentBoard = board) {
+            if (x < 0 || x >= COLS || y < 0 || y >= ROWS) return null;
+            const tile = currentBoard[y * COLS + x];
+            if (tile) {
+                return { ...tile, x: x, y: y };
+            }
+            return null;
+        }
+        function isArithmetic(nums) {
+            if (!nums || nums.length < 2) return false;
+            if (nums.length === 2) return true;
+            const diff = nums[1] - nums[0];
+            for (let i = 2; i < nums.length; i++) {
+                if (nums[i] - nums[i-1] !== diff) return false;
+            }
+            return true;
+        }
+        function isGeometric(nums) {
+            if (!nums || nums.length < 2) return false;
+            const allZeros = nums.every(n => n === 0);
+            if (allZeros) return true;
+            if (nums[0] === 0 && !allZeros) return false;
+            if (nums.length >= 2 && nums[0] !== 0 && nums[1] === 0) {
+                for (let i = 2; i < nums.length; i++) { if (nums[i] !== 0) return false; }
+                return true;
+            }
+            if (nums.some((n, index) => n === 0 && index > 0 && nums[index-1] !==0 )) return false;
+            if (nums.length === 2) return true;
+            const ratio = nums[1] / nums[0];
+            if (nums[0] === 0) return false;
+            for (let i = 2; i < nums.length; i++) {
+                if (nums[i-1] === 0) { return nums[i] === 0; }
+                if (Math.abs((nums[i] / nums[i-1]) - ratio) > 1e-9 ) { return false; }
+            }
+            return true;
+        }
+        function checkSequence(values) {
+            if (!values || values.length < 2) return false;
+            return isArithmetic(values) || isGeometric(values);
+        }
+        function getPotentialSequences(currentBoard = board) {
+            const collectedSequences = [];
+            const processedForHoriz = new Array(ROWS * COLS).fill(false);
+            const processedForVert = new Array(ROWS * COLS).fill(false);
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const cellIdx = r * COLS + c;
+                    if (currentBoard[cellIdx] && !processedForHoriz[cellIdx]) {
+                        let currentSequenceTiles = []; let tempC = c; const startColor = currentBoard[cellIdx].color;
+                        while (tempC < COLS && currentBoard[r * COLS + tempC] && currentBoard[r * COLS + tempC].color === startColor) {
+                            currentSequenceTiles.push({ ...currentBoard[r * COLS + tempC], x: tempC, y: r });
+                            processedForHoriz[r * COLS + tempC] = true; tempC++;
+                        }
+                        if (currentSequenceTiles.length > 0) {
+                            collectedSequences.push({ tiles: currentSequenceTiles, color: startColor, direction: 'H' });
+                        }
+                    }
+                }
+            }
+            for (let c = 0; c < COLS; c++) {
+                for (let r = 0; r < ROWS; r++) {
+                    const cellIdx = r * COLS + c;
+                    if (currentBoard[cellIdx] && !processedForVert[cellIdx]) {
+                        let currentSequenceTiles = []; let tempR = r; const startColor = currentBoard[cellIdx].color;
+                        while (tempR < ROWS && currentBoard[tempR * COLS + c] && currentBoard[tempR * COLS + c].color === startColor) {
+                            currentSequenceTiles.push({ ...currentBoard[tempR * COLS + c], x: c, y: tempR });
+                            processedForVert[tempR * COLS + c] = true; tempR++;
+                        }
+                        if (currentSequenceTiles.length > 0) {
+                            collectedSequences.push({ tiles: currentSequenceTiles, color: startColor, direction: 'V'});
+                        }
+                    }
+                }
+            }
+            return collectedSequences;
+        }
+        function checkRule3Strict(tileData, targetX, targetY, isCheckingHorizontal, currentBoard) {
+            const placedTile = { ...tileData, x: targetX, y: targetY }; 
+            let collectedTilesInLine = [placedTile];
+
+            const mainDX = isCheckingHorizontal ? 1 : 0;
+            const mainDY = isCheckingHorizontal ? 0 : 1;
+            
+            let side1Tiles = [];
+            let currentX = targetX - mainDX; 
+            let currentY = targetY - mainDY;
+            while (currentX >= 0 && currentX < COLS && currentY >= 0 && currentY < ROWS) {
+                const t = getTileAt(currentX, currentY, currentBoard);
+                if (t && t.color === tileData.color) { side1Tiles.unshift(t); currentX -= mainDX; currentY -= mainDY; } 
+                else { break; }
+            }
+            
+            let side2Tiles = [];
+            currentX = targetX + mainDX; 
+            currentY = targetY + mainDY;
+            while (currentX >= 0 && currentX < COLS && currentY >= 0 && currentY < ROWS) {
+                const t = getTileAt(currentX, currentY, currentBoard);
+                if (t && t.color === tileData.color) { side2Tiles.push(t); currentX += mainDX; currentY += mainDY; } 
+                else { break; }
+            }
+
+            collectedTilesInLine = [...side1Tiles, placedTile, ...side2Tiles]; 
+            const sequenceValues = collectedTilesInLine.map(t => t.value);
+
+            if (collectedTilesInLine.length < 2) { return false; } 
+            
+            if (!checkSequence(sequenceValues)) { return false; }
+
+            for (const tileInLine of collectedTilesInLine) {
+                if (tileInLine.x === targetX && tileInLine.y === targetY) { continue; }
+                
+                const orthoDX = isCheckingHorizontal ? 0 : 1;
+                const orthoDY = isCheckingHorizontal ? 1 : 0;
+                
+                const orthoNeighbor1 = getTileAt(tileInLine.x - orthoDX, tileInLine.y - orthoDY, currentBoard);
+                const orthoNeighbor2 = getTileAt(tileInLine.x + orthoDX, tileInLine.y + orthoDY, currentBoard);
+
+                if ((orthoNeighbor1 && orthoNeighbor1.color === tileData.color && !collectedTilesInLine.some(t => t.x === orthoNeighbor1.x && t.y === orthoNeighbor1.y)) ||
+                    (orthoNeighbor2 && orthoNeighbor2.color === tileData.color && !collectedTilesInLine.some(t => t.x === orthoNeighbor2.x && t.y === orthoNeighbor2.y))) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function isValidPlacement(tileData, cellIndex) {
+            const numPlacedTilesTotal = board.filter(t => t !== null).length;
+            const targetX = cellIndex % COLS;
+            const targetY = Math.floor(cellIndex / COLS);
+
+            if (numPlacedTilesTotal === 0) {
+                return true; 
+            }
+
+            if (numPlacedTilesTotal === 1) {
+                const firstTileEntry = board.find(t => t !== null);
+                if (!firstTileEntry) return false;
+                const firstTilePosIndex = board.findIndex(t => t !== null);
+                const firstTileX = firstTilePosIndex % COLS;
+                const firstTileY = Math.floor(firstTilePosIndex / COLS);
+                const isAdjacent = (Math.abs(targetX - firstTileX) + Math.abs(targetY - firstTileY) === 1);
+                const isSameColor = (tileData.color === firstTileEntry.color);
+                return isAdjacent && isSameColor;
+            }
+
+            if (numPlacedTilesTotal >= 2) {
+                const tempBoardWithNewTile = [...board];
+                tempBoardWithNewTile[cellIndex] = {value: tileData.value, color: tileData.color};
+
+                if (checkRule3Strict(tileData, targetX, targetY, true, tempBoardWithNewTile) || 
+                    checkRule3Strict(tileData, targetX, targetY, false, tempBoardWithNewTile)) {
+                    return true;
+                }
+
+                const allBoardSequencesBeforePlacement = getPotentialSequences(board);
+                for (const seqData of allBoardSequencesBeforePlacement) { 
+                    if (seqData.tiles.length >= 3) {
+                        const sourceSequenceValues = seqData.tiles.map(t => t.value);
+                        if (isArithmetic(sourceSequenceValues) || isGeometric(sourceSequenceValues)) {
+                            const sourceSequenceColor = seqData.color;
+                            const sourceDirection = seqData.direction; 
+                            
+                            if (tileData.color === sourceSequenceColor) continue; 
+                            
+                            const occurrencesInSource = seqData.tiles.filter(t => t.value === tileData.value);
+                            
+                            if (occurrencesInSource.length > 0) {
+                                for (const occurrence of occurrencesInSource) { 
+                                    const x_source = occurrence.x; 
+                                    const y_source = occurrence.y;
+                                    let isValidPositionForRule4 = false;
+
+                                    if (sourceDirection === 'H') {
+                                        if (targetX === x_source && (targetY === y_source - 1 || targetY === y_source + 1)) {
+                                            isValidPositionForRule4 = true;
+                                        }
+                                    } else if (sourceDirection === 'V') {
+                                        if (targetY === y_source && (targetX === x_source - 1 || targetX === x_source + 1)) {
+                                            isValidPositionForRule4 = true;
+                                        }
+                                    }
+                                    
+                                    if (isValidPositionForRule4) {
+                                        const neighborDirs = [{dx: -1, dy: 0}, {dx: 1, dy: 0}, {dx: 0, dy: -1}, {dx: 0, dy: 1}];
+                                        let connectsToOwnColorElsewhere = false;
+                                        for (const dir of neighborDirs) {
+                                            const neighbor = getTileAt(targetX + dir.dx, targetY + dir.dy, board); 
+                                            if (neighbor && neighbor.color === tileData.color) {
+                                                connectsToOwnColorElsewhere = true; 
+                                                break;
+                                            }
+                                        }
+                                        if (!connectsToOwnColorElsewhere) { return true; }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        function renderBoard() {
+            gameBoardEl.innerHTML = '';
+            for (let i = 0; i < ROWS * COLS; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                if (board[i]) {
+                    cell.textContent = board[i].value;
+                    cell.classList.add(board[i].color);
+                }
+                cell.ondragover = (e) => { e.preventDefault(); };
+                cell.ondragenter = (e) => {
+                    e.preventDefault();
+                    if (board[i] || !draggingTileColor || gameState !== 'GAME_ACTIVE') return;
+                    clearPreviews();
+                    cell.classList.add('preview', draggingTileColor);
+                };
+                cell.ondragleave = (e) => { cell.classList.remove('preview', 'merah', 'biru', 'kuning', 'hijau'); };
+                cell.ondrop = (e) => {
+                    e.preventDefault(); clearPreviews();
+                    if (board[i] || gameState !== 'GAME_ACTIVE') {
+                        draggingTileData = null; draggingTileColor = null; return;
+                    }
+                    const tileDataFromEvent = JSON.parse(e.dataTransfer.getData("text/plain"));
+                    if (!draggingTileData || tileDataFromEvent.value !== draggingTileData.value || tileDataFromEvent.color !== draggingTileData.color) {
+                        console.error("Mismatch or null drag data."); draggingTileData = null; draggingTileColor = null; return;
+                    }
+
+                    const sequencesBefore = getPotentialSequences(board);
+                    const validSequencesBeforeKeys = new Set();
+                    sequencesBefore.forEach(seq => {
+                        if (seq.tiles.length >=2 && checkSequence(seq.tiles.map(t=>t.value))) {
+                            validSequencesBeforeKeys.add(JSON.stringify(seq.tiles.map(t => ({x: t.x, y: t.y})).sort((a,b) => (a.x*COLS+a.y) - (b.x*COLS+b.y))) + seq.direction);
+                        }
+                    });
+
+                    if (!isValidPlacement(draggingTileData, i)) {
+                        alert("Gerakan tidak valid!"); draggingTileData = null; draggingTileColor = null; return;
+                    }
+                    
+                    board[i] = {value: draggingTileData.value, color: draggingTileData.color};
+                    const playerHand = players[currentPlayer];
+                    const tileIndexInHand = playerHand.findIndex(t => t.value === draggingTileData.value && t.color === draggingTileData.color);
+                    
+                    if (tileIndexInHand !== -1) {
+                        playerHand.splice(tileIndexInHand, 1);
+                        
+                        // === MODIFIKASI PENSKORAN: Setiap penempatan tile yang valid = 1 poin ===
+                        let scoreToAdd = 1; // Hanya 1 poin untuk setiap tile yang berhasil diletakkan
+                        scores[currentPlayer] += scoreToAdd;
+                        // ====================================================================
+                        
+                        // MODIFIKASI: mainkan suara & animasi saat skor bertambah
+                        playAudio(sfxPlaceTile);
+                        const scoreEl = document.getElementById(`score-${currentPlayer}`);
+                        scoreEl.textContent = `Skor: ${scores[currentPlayer]}`;
+                        if (scoreToAdd > 0) { // Animasi tetap berjalan jika ada penambahan skor
+                            scoreEl.classList.add('popping');
+                            scoreEl.addEventListener('animationend', () => {
+                                scoreEl.classList.remove('popping');
+                            }, { once: true });
+                        }
+
+                        renderBoard(); // Render ulang dulu untuk menempatkan cell baru
+                        const justPlacedCell = gameBoardEl.children[i];
+                        if (justPlacedCell) {
+                             justPlacedCell.classList.add('bounce');
+                             justPlacedCell.classList.add('shockwave'); // Tambah animasi shockwave
+                             justPlacedCell.addEventListener('animationend', () => {
+                                 justPlacedCell.classList.remove('shockwave');
+                             }, { once: true });
+                        }
+                        
+                        // Cek apakah semua tile sudah habis (opsional: jika ingin game berakhir ketika semua tile habis)
+                        const allTilesPlayed = players.every(hand => hand.length === 0) && board.filter(t => t !== null).length === COLS * ROWS;
+                        if (allTilesPlayed) {
+                            endGameAction(); // Panggil endGameAction jika semua tile habis
+                        } else {
+                            currentPlayer = (currentPlayer + 1) % playerCount;
+                            updateTurnInfo(); 
+                            renderPlayers();
+                        }
+                    } else {
+                        console.error("Tile not in hand."); board[i] = null; 
+                    }
+                    draggingTileData = null; draggingTileColor = null;
+                };
+                gameBoardEl.appendChild(cell);
+            }
+        }
+
+        function initializeNewGame() {
+            gameState = 'IDLE';
+            dealTiles();
+            renderPlayers();
+            renderBoard();
+            updateTurnInfo();
+            hideGameMessage(); // Pastikan pesan game over tersembunyi saat game baru dimulai
+            endGamePopupOverlay.classList.remove('active'); // Pastikan popup tersembunyi
+            initializeGameAnimationSequence();
+        }
+
+        function initializeGameAnimationSequence() {
+             if (gameState === 'IDLE' || gameState === 'GAME_OVER') {
+                 gameState = 'ANIMATING_START_TILES';
+                 hideGameMessage();
+                 resetTileAnimations();
+                 renderPlayers();
+
+                 animateTilesInSequence()
+                     .then(() => showGameStartAnimation())
+                     .then(() => {
+                         gameState = 'GAME_ACTIVE';
+                         console.log("Game is now active!");
+                         renderPlayers(); 
+                     })
+                     .catch(error => {
+                         console.error("Error during game initialization animation:", error);
+                         gameState = 'IDLE';
+                     });
+             }
+        }
+        
+        // MODIFIKASI: Event listener untuk tombol mute/unmute
+        document.addEventListener('DOMContentLoaded', () => {
+            showScreen(startScreen);
+            
+            const soundToggleBtn = document.getElementById('sound-toggle-btn');
+            const soundOnIcon = document.getElementById('sound-on-icon');
+            const soundOffIcon = document.getElementById('sound-off-icon');
+
+            soundToggleBtn.addEventListener('click', () => {
+                isMuted = !isMuted;
+                allAudio.forEach(audio => audio.muted = isMuted);
+                
+                if (isMuted) {
+                    soundOnIcon.style.display = 'none';
+                    soundOffIcon.style.display = 'block';
+                    bgMusic.pause();
+                } else {
+                    soundOnIcon.style.display = 'block';
+                    soundOffIcon.style.display = 'none';
+                    if(gameWrapper.classList.contains('active')) {
+                        bgMusic.play();
+                    }
+                }
+            });
+             
+             // Tambahkan event listener untuk memainkan suara klik pada semua tombol utama
+             document.querySelectorAll('button').forEach(button => {
+                 // Pastikan tidak menambahkan listener ganda pada tombol yang sudah punya listener sendiri
+                 if(button.id !== 'sound-toggle-btn' && 
+                    button.id !== 'start-game-btn' && 
+                    button.id !== 'view-rules-btn' && 
+                    button.id !== 'start-from-rules-btn' && 
+                    button.id !== 'back-to-start-btn' && 
+                    button.id !== 'game-back-to-start-btn' && 
+                    button.id !== 'game-view-rules-btn' && 
+                    button.id !== 'back-to-start-from-names-btn' &&
+                    button.id !== 'restart-game-btn' && 
+                    button.id !== 'back-to-menu-btn' &&
+                    button.id !== 'back-to-game-running-btn' 
+                 ) {
+                     button.addEventListener('click', () => playAudio(sfxClick));
+                 }
+             });
+
+            // === Event Listeners untuk Tombol Pop-up Akhir Game ===
+            restartGameBtn.addEventListener('click', () => {
+                playAudio(sfxClick);
+                endGamePopupOverlay.classList.remove('active'); // Sembunyikan pop-up
+                initializeNewGame(); // Mulai game baru
+            });
+
+            backToMenuBtn.addEventListener('click', () => {
+                playAudio(sfxClick);
+                goBackToStart(); // Kembali ke layar awal
+            });
+        });
+    </script>
+</body>
+</html>
